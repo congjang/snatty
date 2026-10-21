@@ -118,7 +118,9 @@ export default function WritePage() {
               maxLength={MAX_LENGTH}
               placeholder={PLACEHOLDER}
               aria-label="기록 내용"
-              className={`${TEXT_STYLE} resize-none overflow-hidden bg-transparent text-[color:var(--colorElementBase1Default,#35363b)] outline-none placeholder:text-[color:var(--colorElementBase1Disabled,rgba(0,0,0,0.3))]`}
+              // TODO: 포커스 링 임시 스타일 — 시안 확정 후 디자인대로 교체 (접근성 필수라 먼저 적용).
+              // 바깥 영역이 overflow-y-auto라 링은 안쪽(inset)으로 그린다.
+              className={`${TEXT_STYLE} resize-none overflow-hidden rounded-[var(--Grid-Radius-L,12px)] bg-transparent text-[color:var(--colorElementBase1Default,#35363b)] outline-none placeholder:text-[color:var(--colorElementBase1Disabled,rgba(0,0,0,0.3))] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--colorOutlinePrimaryDefault,#03584d)]`}
             />
           </div>
         </div>

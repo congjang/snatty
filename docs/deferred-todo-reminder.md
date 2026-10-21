@@ -28,7 +28,7 @@ git checkout backup/todo-reminder-2026-10-22 -- src/app/page.tsx   # 현재 화�
 | 텍스트 → 할 일 추천 로직 | `src/app/lib/recordSuggest.ts` (+ 테스트 12건, 스토리) | 유지 — 화면에 연결된 적 없음 |
 | D-day 표시 | `src/app/components/Card.tsx` (마감 표시) | 유지 — 디자인 시스템 컴포넌트 |
 | 목록·체크박스·토글 컴포넌트 | `List`, `ListItem`, `Checkbox`, `ToggleSwitch` | 유지 — 디자인 시스템 컴포넌트(Storybook 있음) |
-| 리마인더·푸시 토큰 서버 API | `server/src/app.ts` `POST /v1/reminders`, `POST /v1/push-tokens` + 테스트 | 유지 — **아직 열려 있음**(아래 "결정 필요" 참고) |
+| 리마인더·푸시 토큰 서버 API | `server/src/app.ts` `POST /v1/reminders`, `POST /v1/push-tokens` + 테스트 | **유지 확정** — 리마인더는 기능으로 추가할 예정이라 닫지 않음 |
 | 리마인더·푸시 DB 모델 | `server/prisma/schema.prisma` `ReminderSpec`, `DevicePushToken` | 유지 |
 | 리마인더 설정 타입 | `src/types/journal.ts` | 유지 |
 
@@ -39,6 +39,7 @@ git checkout backup/todo-reminder-2026-10-22 -- src/app/page.tsx   # 현재 화�
 3. 푸시 알림(`PUSH-NOTIFICATION`)과 네이티브 앱(`NATIVE-APP`)이 리마인더의 전제.
 4. 접근성: 되살린 화면의 체크박스·토글 키보드 조작, `List`/`ListItem` 라벨 재점검.
 
-## 결정 필요
+## 결정됨 (2026-10-22)
 
-- **서버 `/v1/reminders`·`/v1/push-tokens`를 1차 론칭 때 닫을지.** 사용하는 화면이 없는데 로그인한 사용자가 직접 호출할 수 있는 상태입니다. 제거까지는 필요 없고 비활성(기능 플래그)만 해도 공격 면적이 줄어듭니다. 아직 건드리지 않았습니다.
+- **서버 `/v1/reminders`·`/v1/push-tokens`는 닫지 않고 유지한다.** 리마인더·푸시를 기능으로 추가할 예정이기 때문. 사용하는 화면이 아직 없으니, 그 사이에도 두 경로에 레이트 리미팅·스키마 검증은 계속 적용돼 있다(SECURITY-HARDENING).
+- 리마인더·푸시 자체는 1차 론칭 범위 밖(후순위 그룹 8.1)으로 추적한다.
