@@ -14,6 +14,7 @@ docs/
 ├── first-launch.md             네이티브 첫 론칭 로드맵 — 기능적 흐름 + 01~08 결정 기록, 한 파일
 ├── DESIGN_TOKENS_RUNBOOK.md    디자인 토큰 파이프라인 운영 가이드
 ├── data-migration.md           (초안) 익명/dev-placeholder 계정 → 실사용자 계정 데이터 병합 전략
+├── deferred-todo-reminder.md   후순위 기능(할 일·마감일·리마인더) 백업 위치와 되살리는 방법
 └── archive/
     └── GIT_SETUP_HISTORY.md    과거 1회성 조사 기록 — 운영 문서 아님
 ```

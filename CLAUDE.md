@@ -9,6 +9,7 @@
 - **앱명:** snatty-app (마이크로 저널링 앱)
 - **플랫폼:** Next.js 16 (웹) + Fastify API 서버 (`server/`) + 미래 네이티브 (`native/`)
 - **주요 기술:** Next.js 16 App Router, React 19, Tailwind CSS 4, TypeScript 5 strict, Prisma 6, Fastify 5, Framer Motion 12
+- **1차 론칭 범위(2026-10-22 결정):** "지금 이 순간을 기록하는 것"만. 할 일·마감일·리마인더 등은 후순위 — 백업 태그 `backup/todo-reminder-2026-10-22`, 안내 `docs/deferred-todo-reminder.md`. 후순위 기능은 시안 없이 되살리거나 새로 설계하지 말 것
 - **베이스 해상도:** 모바일 우선 — 390px 기준, 744px 태블릿 대응
 
 ---
