@@ -12,8 +12,9 @@
  *       막기 위해 synced: true로 간주(서버 동기화 여부는 실제로 불명확하나,
  *       과거엔 재시도 자체가 없었으므로 안전한 기본값).
  */
-const CURRENT_SCHEMA_VERSION = 2;
-const META_KEY = "snatty-records-meta-v1";
+/** 테스트에서 실제 값과 어긋나지 않게 직접 참조할 수 있도록 export. */
+export const CURRENT_SCHEMA_VERSION = 2;
+export const META_KEY = "snatty-records-meta-v1";
 
 type StoreMeta = {
   schemaVersion: number;
@@ -51,10 +52,23 @@ function writeMeta(meta: StoreMeta) {
  * 구버전 데이터를 현재 스키마로 마이그레이션합니다.
  * 새 버전 추가 시: switch 문에 case 를 추가하고 CURRENT_SCHEMA_VERSION 을 올리세요.
  */
-function migrateRecords(records: unknown[], fromVersion: number): StoredRecord[] {
+export function migrateRecords(records: unknown[], fromVersion: number): StoredRecord[] {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let data = records as any[];
   let version = fromVersion;
+
+  // fromVersion이 CURRENT_SCHEMA_VERSION보다 크면(손상된 meta, 또는 이 앱보다 최신
+  // 스키마로 쓰인 데이터를 구버전 앱이 여는 롤백 시나리오) 아래 while 루프 조건
+  // (version < CURRENT_SCHEMA_VERSION)이 처음부터 거짓이라 한 번도 안 돌고 그대로
+  // 통과해버린다 — "알 수 없는 버전은 안전하게 초기화"라는 이 함수의 목적과 정반대로
+  // 검증 없이 그대로 반환되던 실제 버그. "낮은 버전 도중 처리 안 된 case를 만나는"
+  // 시나리오는 아래 while 루프가 이미 잡아내므로, 여기서는 그 반대 방향만 보강한다.
+  if (version > CURRENT_SCHEMA_VERSION) {
+    console.warn(
+      `[recordsStore] Unknown schema version ${version} (현재 ${CURRENT_SCHEMA_VERSION}보다 높음), resetting records.`,
+    );
+    return [];
+  }
 
   while (version < CURRENT_SCHEMA_VERSION) {
     switch (version) {
@@ -110,7 +124,7 @@ export type StoredRecord = {
   synced?: boolean;
 };
 
-const STORAGE_KEY = "snatty-records-v1";
+export const STORAGE_KEY = "snatty-records-v1";
 
 /**
  * 2026-08-14 서비스명 개편(remind → snatty)으로 localStorage 키가 바뀜.
@@ -118,8 +132,8 @@ const STORAGE_KEY = "snatty-records-v1";
  * CLAUDE.md §5-2(localStorage 키 변경 시 마이그레이션 로직 필수) 준수. 실패해도 이후
  * readRaw()가 그냥 빈 배열로 안전하게 폴백하므로 데이터가 깨지지는 않는다.
  */
-const LEGACY_STORAGE_KEY = "remind-records-v1";
-const LEGACY_META_KEY = "remind-records-meta-v1";
+export const LEGACY_STORAGE_KEY = "remind-records-v1";
+export const LEGACY_META_KEY = "remind-records-meta-v1";
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -170,10 +184,13 @@ function readRaw(): StoredRecord[] {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
 
-    // 스키마 버전 확인 후 마이그레이션
+    // 스키마 버전 확인 후 마이그레이션. `<`가 아니라 `!==`인 이유: 저장된 버전이
+    // CURRENT_SCHEMA_VERSION보다 "높은" 경우(손상된 meta, 롤백 시나리오)도
+    // migrateRecords()로 보내야 그 안의 안전한 초기화 분기가 실제로 실행된다 —
+    // `<`만 쓰면 그 경로를 아예 안 타서 검증 없이 그대로 통과해버리는 실제 버그였음.
     const meta = readMeta();
     let records = parsed;
-    if (meta.schemaVersion < CURRENT_SCHEMA_VERSION) {
+    if (meta.schemaVersion !== CURRENT_SCHEMA_VERSION) {
       records = migrateRecords(parsed, meta.schemaVersion);
       writeRaw(records as StoredRecord[]);
       writeMeta({ schemaVersion: CURRENT_SCHEMA_VERSION });
