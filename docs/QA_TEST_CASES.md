@@ -95,7 +95,7 @@
 
 ### 1.3 외부 API (OpenWeatherMap / 카카오 역지오코딩)
 
-관련 코드: `src/app/api/weather/route.ts`, `src/app/components/LiveWeatherBlock.tsx`, `src/app/lib/weather/mapOwmToIcon.ts`.
+관련 코드: `src/app/api/weather/route.ts`, `src/app/lib/useWeatherSnapshot.ts`, `src/app/lib/weather/mapOwmToIcon.ts`.
 
 | 모듈 | TC ID | 테스트 시나리오 | 사전 조건 | 상세 테스트 절차 (Steps) | 기대 결과 (Expected) | 결과 (Result) | 비고 |
 |---|---|---|---|---|---|---|---|
@@ -138,7 +138,7 @@ Vercel(프론트) + Render(백엔드) + Neon(DB) 조합의 실배포 환경과 �
 
 ## 2. UI/UX 및 디자인 테스트 케이스 (추가 예정)
 
-> **디자인이 아직 확정되지 않아 이 섹션은 구조만 마련해뒀습니다.** Figma 화면설계가 나오고 Red UI 컴포넌트(`RecordEditStatusBar`, `RecordEditToolbar`, `MyProfileCard`, `SettingsSection`, `FeedNewRecordCta` 등, [CLAUDE.md § 4](../CLAUDE.md) 참고)가 실제 구현으로 교체되는 시점부터 아래 하위 섹션에 TC를 채워나갑니다. 표 형식은 1부와 동일합니다.
+> **디자인이 아직 확정되지 않아 이 섹션은 구조만 마련해뒀습니다.** Figma 화면설계가 나오고 Red UI 컴포넌트(`MyProfileCard`, `SettingsSection` 등, [CLAUDE.md § 4](../CLAUDE.md) 참고)가 실제 구현으로 교체되는 시점부터 아래 하위 섹션에 TC를 채워나갑니다. 표 형식은 1부와 동일합니다.
 
 ### 2.1 반응형 레이아웃 (390px 모바일 기준 / 744px 태블릿)
 _(작성 예정)_
@@ -156,7 +156,7 @@ _(작성 예정)_
 _(작성 예정 — `EMPTY-UI` 마일스톤 완료 후)_
 
 ### 2.6 Red UI 컴포넌트 교체 후 회귀 테스트
-_(작성 예정 — 표 하단 컴포넌트별 체크리스트: `RecordEditStatusBar`, `RecordEditToolbar`, `IosKeyboardMock` 제거, `MyProfileCard`, `SettingsSection`, `FeedNewRecordCta`)_
+_(작성 예정 — 2026-10-22 기록하기 `/write`·타임라인 `/` 신규 화면 TC(취소/완료, 0/500, 저장 후 카드 이동·토스트, 로컬 저장 실패 시 화면 유지) + `MyProfileCard`, `SettingsSection`)_
 
 ---
 

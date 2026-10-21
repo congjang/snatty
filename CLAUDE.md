@@ -70,8 +70,8 @@ style={{ color: '#046253' }}
 
 ```
 src/app/
-├── page.tsx              # 홈: 기록하기
-├── feed/page.tsx         # 모아보기: 타임라인
+├── page.tsx              # 홈: 모아보기 가로 타임라인 (맨 끝 "새 기록" 카드/FAB → /write)
+├── write/page.tsx        # 기록하기: 쓰기 전용 전체 화면 (취소/완료)
 ├── my/page.tsx           # 마이페이지
 ├── playground/page.tsx   # 컴포넌트 갤러리 (제품 화면 아님)
 ├── api/                  # Next.js Route Handlers (BFF)
@@ -106,12 +106,12 @@ src/app/
 아래 컴포넌트들은 `bg-red-200` 플레이스홀더로 표시된 미구현 영역입니다.
 해당 영역을 수정할 때 반드시 확인하고 실제 컴포넌트로 교체하세요.
 
+> 기록하기(쓰기)·모아보기(가로 타임라인)는 2026-10-22 Figma 시안(`모아보기_타임라인_가로`)대로 교체 완료 —
+> 가짜 상태바/툴바/iOS 키보드 목업과 `FeedNewRecordCta` placeholder는 제거됐습니다.
+> 아직 시안이 없어 구현하지 않은 부분: "N번째 기록" 문구, 감정·할 일·마감일 입력, 리스트/달력 보기(세그먼트 컨트롤의 2·3번째 탭은 비활성).
+
 | 화면 | 위치 | 교체 대상 컴포넌트명 |
 |------|------|---------------------|
-| 기록하기 | `src/app/page.tsx` 편집 오버레이 상단 | `RecordEditStatusBar` |
-| 기록하기 | 편집 오버레이 툴바 | `RecordEditToolbar` |
-| 기록하기 | 편집 오버레이 하단 키보드 | `IosKeyboardMock` (네이티브 이전 시 제거) |
-| 모아보기 | `src/app/feed/page.tsx` 새 기록 CTA | `FeedNewRecordCta` |
 | 마이 | `src/app/my/page.tsx` 프로필 영역 | `MyProfileCard` |
 | 마이 | 설정 섹션들 | `SettingsSection` |
 
@@ -150,7 +150,7 @@ src/app/
 
 다음 우선순위에 따라 작업을 진행합니다.
 
-1. **Red UI 컴포넌트 교체** — `MyProfileCard`, `SettingsSection`, `FeedNewRecordCta` 구현
+1. **Red UI 컴포넌트 교체** — `MyProfileCard`, `SettingsSection` 구현
 2. **접근성(a11y)** — 편집 오버레이 포커스 트랩, ARIA 레이블, Lighthouse 통과
 3. **예외/빈 상태 UX** — 네트워크 실패 토스트, 빈 피드 화면, 저장 중 중복 클릭 방지
 4. **인증** — JWT 기반 인증으로 교체 (서버)

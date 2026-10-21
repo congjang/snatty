@@ -1,6 +1,11 @@
 # 전체 진행 현황 체크리스트
 
-> 마지막 갱신: 2026-09-06 — 디자인 제외하고 지금 바로 할 수 있는 것 중 가장 시급한 2가지(DB 백업 실제 검증, 프로덕션 에러 추적)를 처리했습니다.
+> 마지막 갱신: 2026-10-22 — Figma에서 완성된 "기록하기(쓰기)" 플로우를 앱에 반영하고, 그 과정에서 낡은 코드를 정리했습니다.
+> - **쓰기 화면 새로 구현(`/write`)**: 취소/완료 버튼 + 화면 가운데 큰 글씨로 쓰는 전체 화면. 휴대폰 기본 키보드를 그대로 쓰고, 글자 수(0/500)가 아래에 표시됩니다. 빈 내용이면 완료 버튼이 비활성입니다.
+> - **모아보기를 가로 타임라인으로 교체(`/`)**: 기록 카드가 선으로 이어져 가로로 나열되고, 맨 끝의 "바로 지금, 어떤 생각이 떠올랐나요?" 카드나 + 버튼을 누르면 쓰기 화면으로 갑니다. 저장하면 방금 쓴 카드가 가운데로 오고 "기록이 저장되었습니다" 안내가 뜹니다. 이제 첫 화면이 타임라인입니다.
+> - **일부러 숨기거나 뺀 것(시안이 아직 없음)**: "N번째 기록" 문구, 감정 선택·할 일·마감일 입력, 리스트/달력 보기(탭은 보이지만 눌리지 않음). 새 기록은 감정·할 일 정보 없이 저장되며, 기존 기록 데이터와는 그대로 호환됩니다.
+> - **정리한 낡은 코드**: 가짜 상태바·툴바·iOS 키보드 목업이 있던 편집 오버레이, 보상 화면, 세로 리스트 보기, 하단 dot 타임라인(`FeedTimelineDots`), 랜덤 "N번째 기록" 문구 모음(`recordHeadlineTemplates`), 날씨 표시 블록(`LiveWeatherBlock` → 화면 없이 날씨만 가져오는 `useWeatherSnapshot`으로 대체), `/feed` 화면.
+> 2026-09-06 — 디자인 제외하고 지금 바로 할 수 있는 것 중 가장 시급한 2가지(DB 백업 실제 검증, 프로덕션 에러 추적)를 처리했습니다.
 > - **DB 백업→복구 실제 리허설, 그 과정에서 실제 버그 발견·수정** — 상세는 아래 `DATA-INTEGRITY` 섹션. 요약: 2026-07-16엔 백업 스크립트를 "만들기만 하고" 완료 처리했었는데, 이번에 실제로 백업→DB 완전 삭제→복구까지 돌려서 데이터가 정확히 돌아오는 걸 확인했고, 그 과정에서 로컬 백업 도구 버전이 실제 운영 DB(Neon, Postgres 18)보다 낮아서 지금까지 운영 DB는 백업 자체가 실패했을 것이라는 사실을 발견해 즉시 수정
 > - **프로덕션 에러 추적(Sentry) 연동** — 지금까진 서버·클라이언트 어디서 에러가 나도 알 방법이 없었음. `@sentry/nextjs`(프론트)와 `@sentry/node`(서버) 연동, DSN 미설정 시 완전히 no-op이라 Sentry 계정을 아직 안 만든 지금도 빌드·테스트 정상 동작 확인. **Sentry 계정 생성·DSN 발급은 외부 서비스 가입이라 직접 해주셔야 함** — 발급 후 환경변수만 넣으면 바로 수집 시작
 > 2026-09-04 — Figma에서 진행 중인 "기록하기" 플로우 개편 시안을 검토하고, 그중 화면 디자인과 분리해 먼저 만들 수 있는 부분(텍스트 자동 추천 로직)을 미리 구현했습니다.
@@ -314,9 +319,9 @@ sequenceDiagram
 
 | 태그 | 항목 | 파일·위치 | 완료 기준 | 왜 PM이 신경 써야 하는가 |
 |---|------|-----------|-----------|-----------|
-| `EMPTY-UI` | **피드 빈 상태 UX** | `src/app/feed/page.tsx` | 기록 0건일 때 샘플 데이터 대신 빈 상태 화면 + 안내 문구 | 신규 가입자가 첫 화면에서 "가짜 샘플"을 보고 자기 기록으로 착각하거나, 왜 데이터가 있는지 혼란스러워할 수 있습니다 — 첫 경험(온보딩)에 직접 영향 |
+| `EMPTY-UI` | **피드 빈 상태 UX** (2026-10-22: 타임라인 개편으로 기록 0건이면 "새 기록" 카드만 보이는 상태 — 별도 빈 상태 시안은 아직 없음) | `src/app/page.tsx` | 기록 0건일 때 샘플 데이터 대신 빈 상태 화면 + 안내 문구 | 신규 가입자가 첫 화면에서 "가짜 샘플"을 보고 자기 기록으로 착각하거나, 왜 데이터가 있는지 혼란스러워할 수 있습니다 — 첫 경험(온보딩)에 직접 영향 |
 | `PROFILE-UI` | **Red UI 교체 — 마이페이지** | `src/app/my/page.tsx` | `MyProfileCard`, `SettingsSection` 구현 (Figma 설계 후) | 지금은 빨간 placeholder 박스가 그대로 보입니다 — 사용자에게 "미완성 제품"이라는 인상을 직접적으로 줍니다 |
-| `EDITOR-UI` | **Red UI 교체 — 편집 오버레이** | `src/app/page.tsx` 편집 오버레이 | `RecordEditStatusBar`, `RecordEditToolbar` 구현; `IosKeyboardMock` 제거(네이티브 이전 시) | 기록 작성은 앱의 핵심 행동입니다 — 그 화면에 미완성 placeholder가 보이면 가장 자주, 가장 중요한 순간에 신뢰를 잃습니다 |
+| ~~`EDITOR-UI`~~ | ~~**Red UI 교체 — 편집 오버레이**~~ (✓ 2026-10-22 — 목업 오버레이 자체를 없애고 새 쓰기 화면 `/write`로 대체) | `src/app/write/page.tsx` | ~~`RecordEditStatusBar`, `RecordEditToolbar` 구현; `IosKeyboardMock` 제거~~ | 기록 작성은 앱의 핵심 행동입니다 — 그 화면에 미완성 placeholder가 보이면 가장 자주, 가장 중요한 순간에 신뢰를 잃습니다 |
 | `DATA-INTEGRITY` | **데이터 삭제·무결성 보장** | `server/src/app.ts`, `server/prisma/schema.prisma` | 삭제 엔드포인트 구현(✓ 2026-07-13), `body` 불변성 코드로 강제, 백업 복구 1회 검증 | 사용자가 쓴 기록이 실수로 사라지거나 바뀌면 "내 기록을 믿고 맡길 수 있는 앱"이라는 이 제품의 존재 이유 자체가 무너집니다. 백업 미검증 상태에서 장애가 나면 전체 사용자 데이터를 통째로 잃을 수 있습니다 |
 | ~~`SYNC-SAFETY`~~ | ~~**오프라인 저장 안전장치 보강**~~ (2026-07-22 재점검 신규, 2026-07-24 2/2 완료) | `src/app/lib/recordsStore.ts` | ~~다중 탭 동시 저장 경합 방지~~(✓ 2026-07-24), ~~localStorage 쓰기 실패(quota 초과·프라이빗 모드) 시 사용자 안내~~(✓ 2026-07-24 — 기존 `ToastMessage` 재사용, 새 디자인 불필요로 판명) | 저장이 조용히 실패하면 사용자는 "분명히 저장했는데 새로고침하니 기록이 사라졌다"를 겪게 됩니다 — 이 앱이 가장 피해야 할 경험입니다. `SYNC` 마일스톤이 2026-05~07에 완료 처리됐다가 이번 재점검에서 다시 열렸고, 2026-07-24에 7/7로 재완료 |
 
@@ -417,11 +422,11 @@ sequenceDiagram
 
 | 작업 | 수정 체인 |
 |---|---|
-| 기록에 새 필드 추가 | `src/types/journal.ts` → `recordsStore.ts` (타입 + validate + 스키마 버전↑) → `page.tsx` UI/state → `snattyApi.ts` payload → `server/src/app.ts` zod 스키마 → `schema.prisma` → `prisma migrate dev` |
+| 기록에 새 필드 추가 | `src/types/journal.ts` → `recordsStore.ts` (타입 + validate + 스키마 버전↑) → `write/page.tsx` UI/state → `snattyApi.ts` payload → `server/src/app.ts` zod 스키마 → `schema.prisma` → `prisma migrate dev` |
 | 인증 방식 교체 (`AUTH`) | `server/src/app.ts`의 `resolveDevEmail()` 함수 하나만 교체. `index.ts`는 부트스트랩(프로덕션 가드 + `listen()`)만 담당하므로 건드릴 필요 없음 |
 | AI 요약/분석 파이프라인 연결 (`AI-PIPELINE`) | `server/src/jobs/ai-queue.ts`의 `enqueueAiJob()` stub을 BullMQ + Redis 구현으로 교체 (호출부는 그대로) |
 | 재시도 정책 조정(지수 백오프 등, `SYNC` 확장) | `snattyApi.ts`의 `syncPendingRecords()` — 지금은 실패 시 즉시 중단 후 다음 트리거(앱 시작/`online`)까지 대기하는 단순 정책 |
-| 모아보기(피드)에 새 표시 추가 | `recordsStore.ts`의 `getRecords()` 반환 타입 확인 → `feed/page.tsx`에서 렌더링 |
+| 모아보기(피드)에 새 표시 추가 | `recordsStore.ts`의 `getRecords()` 반환 타입 확인 → `page.tsx`/`components/RecordTimeline.tsx`에서 렌더링 |
 
 ## 부록 B — Red UI 컴포넌트 후보 표 (`PROFILE-UI`, `EDITOR-UI` 근거)
 
@@ -429,16 +434,16 @@ sequenceDiagram
 
 Figma에서 대응 컴포넌트 노드를 확정하면 아래 표의 **비고** 칸에 `node-id`를 채우고, 교체 요청은 이런 식으로:
 
-> `FeedNewRecordCta` — Figma 노드 `xxx:yyy` — [feed/page.tsx](../src/app/feed/page.tsx) 빨간 CTA 블록 교체
+> `MyProfileCard` — Figma 노드 `xxx:yyy` — [my/page.tsx](../src/app/my/page.tsx) 빨간 프로필 블록 교체
 
 우선순위는 보통 **기록하기 → 모아보기 → 마이** 순입니다. (`playground`는 제품 화면이 아니므로 후순위)
 
 | 화면 | 파일·위치 (대략) | 제안 컴포넌트명 | 비고 |
 |------|------------------|-----------------|------|
-| 기록하기 (`EDITOR-UI`) | [src/app/page.tsx](../src/app/page.tsx) 편집 오버레이 상단 | `RecordEditStatusBar` 또는 `IosStatusBarMock` | 시계·시그널 등 목업 |
-| 기록하기 (`EDITOR-UI`) | 동일, 상단 도구 버튼 3개 | `RecordEditToolbar` | 이모지/첨부 등 플레이스홀더 |
-| 기록하기 (`EDITOR-UI`) | 동일, 하단 키보드 영역 | `IosKeyboardMock` | 전체 키보드 UI는 앱 이전 시 제거 가능 |
-| 모아보기 | [src/app/feed/page.tsx](../src/app/feed/page.tsx) "오늘의 새 기록" 블록 | `FeedNewRecordCta` | FAB/CTA 디자인에 맞게 |
+| 기록하기 (`EDITOR-UI`) | ~~편집 오버레이 상단~~ | ~~`RecordEditStatusBar`~~ | ✓ 2026-10-22 제거 — 네이티브 상태바 사용 |
+| 기록하기 (`EDITOR-UI`) | ~~동일, 상단 도구 버튼 3개~~ | ~~`RecordEditToolbar`~~ | ✓ 2026-10-22 제거 — 새 시안은 취소/완료 2개 버튼 |
+| 기록하기 (`EDITOR-UI`) | ~~동일, 하단 키보드 영역~~ | ~~`IosKeyboardMock`~~ | ✓ 2026-10-22 제거 — 휴대폰 기본 키보드 사용 |
+| 모아보기 | ~~"오늘의 새 기록" 블록~~ | ~~`FeedNewRecordCta`~~ | ✓ 2026-10-22 — 타임라인 맨 끝 "새 기록" 카드 + FAB로 구현 ([RecordTimeline.tsx](../src/app/components/RecordTimeline.tsx)) |
 | 모아보기 | 동일, 기록 리스트 카드 | `FeedRecordCard` (2줄 타입) | 현재 `Card` + 수동 레이아웃 |
 | 모아보기 | 동일, 로딩 스켈레톤 | `FeedRecordSkeleton` | 선택 |
 | 마이 (`PROFILE-UI`) | [src/app/my/page.tsx](../src/app/my/page.tsx) 프로필 영역 | `MyProfileCard` | 아바타·이메일·버튼 |
@@ -482,7 +487,7 @@ Figma에서 대응 컴포넌트 노드를 확정하면 아래 표의 **비고** 
 | 디자인 | `variable_plugin_JSON`(구 수동 export 경로) deprecated 처리 | 중 | ☑ 완료 |
 | 디자인 | Storybook 설정 + 컴포넌트 스토리 31개 | 중 | ☑ 완료 |
 | 인프라 | `@adailyrecord/design-tokens`(`file:` 의존성) 제거 | 중 | ☑ 완료 |
-| 디자인 | **아직 못 만든 Red UI 플레이스홀더 컴포넌트 구현** — `RecordEditStatusBar`, `RecordEditToolbar`, `IosKeyboardMock`, `FeedNewRecordCta`, `FeedRecordCard`, `FeedRecordSkeleton`, `MyProfileCard`, `SettingsSection` 8개 (상세는 [부록 B](#부록-b--red-ui-컴포넌트-후보-표-profile-ui-editor-ui-근거)) | 상 | ☐ 대기 |
+| 디자인 | **아직 못 만든 Red UI 플레이스홀더 컴포넌트 구현** — `MyProfileCard`, `SettingsSection` 2개 (기록하기·모아보기 쪽 6개는 2026-10-22 새 시안 반영으로 해소) (상세는 [부록 B](#부록-b--red-ui-컴포넌트-후보-표-profile-ui-editor-ui-근거)) | 상 | ☐ 대기 |
 | 디자인 | **신규 제작 필요 컴포넌트 중 Figma 화면설계에 아직 반영 안 된 것** 목록화 + 화면 반영 — 코드보다 디자인이 먼저 비어있는 케이스 | 중 | ☐ 대기 |
 | 디자인 | 감정 선택 UI 개편에 따른 감정 아이콘 세트 재작업 (`KEY-FEATURES`의 감정 태그 항목과 연동) | 중 | ☐ 대기 |
 
@@ -591,7 +596,7 @@ Figma에서 대응 컴포넌트 노드를 확정하면 아래 표의 **비고** 
 
 | 구분 | 체크 항목 | 중요도 | 완료 여부 |
 |---|---|---|---|
-| 기능 | 기록하기 상단 실시간 날씨·위치 표시(`LiveWeatherBlock`, `GET /api/weather`) | 중 | ☑ 완료 |
+| 기능 | 기록하기 상단 실시간 날씨·위치 표시(`LiveWeatherBlock`, `GET /api/weather`) | 중 | ☑ 완료 — (2026-10-22) 새 시안에는 상단 날씨 블록이 없어 표시 컴포넌트는 제거, 기록에 날씨를 함께 저장하는 기능은 `useWeatherSnapshot`으로 유지(카드의 날씨 아이콘으로 표시) |
 | 기능 | OpenWeatherMap 연동(기온·날씨 아이콘) | 중 | ☑ 완료 |
 | 기능 | 카카오 역지오코딩(선택, 시·구·동 단위) | 하 | ☑ 완료 — **[2026-08-14 경위]** 최초 커밋 때부터 코드에 있었지만 실제로 발급받아 쓴 키가 아니었음이 뒤늦게 확인돼(사용자 확인) 한 번 제거했다가, 원인을 짚어보니(OWM `lang=kr`는 날씨 상태만 한글화하고 지역명(`name`)은 로마자로만 나옴 — 직접 API 호출로 확인) 시·구·동 단위 한글 지역명 자체가 카카오 없이는 불가능함을 확인하고 같은 날 재요청으로 코드 복원. 사용자가 카카오 REST API 키를 새로 발급받아 로컬·Vercel 양쪽에 등록했으나, 처음엔 403(`App disabled OPEN_MAP_AND_LOCAL service`)으로 계속 실패 — 응답 상태·에러 메시지를 임시로 로그·응답에 노출시켜 원인을 좁힌 결과, Kakao Developers 콘솔에서 "카카오맵" 서비스 자체가 꺼져있던 게 원인으로 확인됨. 서비스 활성화 후 로컬·배포판 모두 실제 한글 주소("서울 서초구 서초동") 정상 반환 확인, 진단용 임시 코드는 확인 직후 제거. `KAKAO_REST_API_KEY` 없으면 기존처럼 OWM 로마자 지역명으로 자동 대체(그래도 앱이 깨지진 않음) |
 | 기능 | 저장 시점 날씨 스냅샷을 기록에 부착, 피드에서 한 줄 표시 | 중 | ☑ 완료 |
@@ -609,6 +614,8 @@ Figma에서 대응 컴포넌트 노드를 확정하면 아래 표의 **비고** 
 | 배포 | 로컬 개발 환경(`docker-compose.yml`, Postgres) | 하 | ☑ 완료 |
 
 ### TIMELINE-UI — 타임라인 피드 (2026-04-01)
+
+> 2026-10-22 — 이 섹션의 세로 보기·하단 dot 타임라인·드래그 슬라이더는 Figma 새 시안(가로 카드 타임라인)으로 교체되며 제거됐습니다. 당시 구현 기록으로만 남깁니다.
 
 | 구분 | 체크 항목 | 중요도 | 완료 여부 |
 |---|---|---|---|

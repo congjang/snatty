@@ -83,7 +83,7 @@ md가 아니라 Claude Code 아티팩트로만 존재하는 시각 자료입니�
 
 "디자인 의존성 없는 백엔드·데이터 구조 안정화" 요청으로 코드 수준 작업 3건 처리:
 
-- **`SYNC-LIVE`(1건)**: 로그아웃/재로그인(다른 계정) 시 로컬 데이터 무효화 — `src/app/lib/session.ts` 신설, `ensureIdentityConsistency()`/`logout()`/`loginAs()`로 identity 변경 감지 시 `memoryCache`·`localStorage` 기록을 지움. `page.tsx`·`feed/page.tsx` 마운트 시점에 연결.
+- **`SYNC-LIVE`(1건)**: 로그아웃/재로그인(다른 계정) 시 로컬 데이터 무효화 — `src/app/lib/session.ts` 신설, `ensureIdentityConsistency()`/`logout()`/`loginAs()`로 identity 변경 감지 시 `memoryCache`·`localStorage` 기록을 지움. `page.tsx`(타임라인) 마운트 시점에 연결(2026-10-22 이후 `feed/page.tsx`는 `page.tsx`로 통합).
 - **`DATA-INTEGRITY`(1건)**: `DELETE /v1/entries/:id` 소프트 삭제 엔드포인트 구현(`JournalEntry.deleted` 사용, `body`는 불변 유지). 테스트 우선으로 검증하기 위해 `server/src/app.ts`(라우트)와 `server/src/index.ts`(부트스트랩)를 분리하고 `vitest` 도입, in-memory Prisma 대역으로 인증·소유권·멱등성 5개 케이스 테스트 작성·통과 확인(`server/src/app.test.ts`).
 - **`AUTH`(문서 초안 1건)**: dev-placeholder 계정(`dev@local.invalid` 등) 데이터를 실사용자 계정으로 병합하는 전략 초안 [`data-migration.md`](./data-migration.md) 작성 — 로컬 미동기화 데이터 업로드(A)와 서버 dev-placeholder 재소유(B) 두 갈래로 분리, 열린 질문(제품 결정 필요) 명시.
 
