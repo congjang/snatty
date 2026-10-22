@@ -9,6 +9,14 @@ const FLING_MS = 320;
 const MAX_FLING_PX = 2400;
 /** 속도를 재는 마지막 구간(ms) — 놓기 직전의 움직임만 본다 */
 const VELOCITY_WINDOW_MS = 90;
+/**
+ * 놓는 순간의 속도(px/ms)로 제스처를 세 단계로 나눈다.
+ * - 이 값 미만: 천천히 끌다 놓음 → 그 자리에 멈춤
+ * - FLICK 이상 ~ FAST 미만: 살짝 튕김 → 바로 옆 카드 한 장으로 넘김
+ * - FAST 이상: 세게 튕김 → 속도만큼 자유롭게 굴러감(ease-out)
+ */
+const FLICK_VELOCITY = 0.25;
+const FAST_VELOCITY = 1.5;
 /** ease-out: 한 프레임(≈16.7ms)마다 목표까지 남은 거리의 이 비율씩 다가간다 → 처음엔 빠르고 끝에서 느려짐 */
 const EASE_PER_FRAME = 0.12;
 const FRAME_MS = 16.67;
@@ -16,6 +24,8 @@ const FRAME_MS = 16.67;
 interface DragState {
   startX: number;
   startLeft: number;
+  /** 누른 순간 화면 가운데에 가장 가까웠던 카드의 순번 — 살짝 튕길 때 이 카드의 이웃으로 넘긴다 */
+  anchorIndex: number;
   dragging: boolean;
   samples: { t: number; x: number }[];
 }
@@ -24,14 +34,33 @@ function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** 스크롤 영역 안의 카드들의 가운데 위치(스크롤 좌표)와, 화면 가운데에 가장 가까운 카드의 순번 */
+function measureCards(scroller: HTMLElement, cardSelector: string) {
+  const box = scroller.getBoundingClientRect();
+  const centers = Array.from(scroller.querySelectorAll<HTMLElement>(cardSelector)).map((card) => {
+    const r = card.getBoundingClientRect();
+    return r.left - box.left + scroller.scrollLeft + r.width / 2;
+  });
+  const viewCenter = scroller.scrollLeft + scroller.clientWidth / 2;
+  let nearest = 0;
+  centers.forEach((c, i) => {
+    if (Math.abs(c - viewCenter) < Math.abs((centers[nearest] ?? c) - viewCenter)) nearest = i;
+  });
+  return { centers, nearest };
+}
+
 /**
- * 가로 스크롤 영역을 "자유 스크롤"로 만든다 — 한 장씩 멈추는 스냅 없음.
- * - 터치: 브라우저 기본 스크롤(관성 포함)에 맡긴다.
- * - 마우스 끌기: 놓은 뒤 속도만큼 ease-out으로 감속하며 더 굴러간다.
+ * 가로 카드 띠의 스크롤 제스처 — 손가락(터치)과 마우스를 같은 방식으로 처리한다.
+ * - 세게 튕기면: 속도만큼 자유롭게 굴러간다(ease-out 감속).
+ * - 살짝 튕기면: 바로 옆 카드 한 장으로 넘어가 가운데에 선다.
+ * - 천천히 끌다 놓으면: 놓은 자리에 그대로 멈춘다.
  * - 마우스 휠(세로): 가로 이동으로 바꾸고 ease-out으로 부드럽게 따라간다.
+ * 터치는 세로 스크롤만 브라우저에 맡기고(`touch-action: pan-y`) 가로는 여기서 직접 읽는다.
  * 움직임 줄이기 설정이면 감속 없이 바로 이동한다.
+ *
+ * @param cardSelector 한 장씩 넘길 때 목표가 되는 카드 요소의 CSS 선택자
  */
-export function useFreeScroll(scrollerRef: RefObject<HTMLDivElement | null>) {
+export function useFreeScroll(scrollerRef: RefObject<HTMLDivElement | null>, cardSelector: string) {
   const rafRef = useRef<number | null>(null);
   const targetRef = useRef(0);
   const dragRef = useRef<DragState | null>(null);
@@ -109,10 +138,11 @@ export function useFreeScroll(scrollerRef: RefObject<HTMLDivElement | null>) {
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     stop();
     suppressClickRef.current = false; // 이전 드래그의 클릭 무시 표시가 남아 있지 않게
-    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     dragRef.current = {
       startX: e.clientX,
       startLeft: e.currentTarget.scrollLeft,
+      anchorIndex: measureCards(e.currentTarget, cardSelector).nearest,
       dragging: false,
       samples: [{ t: e.timeStamp, x: e.clientX }],
     };
@@ -150,16 +180,28 @@ export function useFreeScroll(scrollerRef: RefObject<HTMLDivElement | null>) {
       /* 캡처가 없었으면 무시 */
     }
     if (e.type === "pointercancel") return;
-    // 놓기 직전 속도(px/ms)로 더 굴러가기. 놓기 전에 멈춰 있었다면 속도 0.
+    // 놓기 직전 속도(px/ms)로 제스처를 구분한다. 놓기 전에 멈춰 있었다면 속도 0.
     const first = drag.samples[0];
     const lastSample = drag.samples[drag.samples.length - 1];
     const span = lastSample.t - first.t;
     const idle = e.timeStamp - lastSample.t;
     if (span <= 0 || idle > VELOCITY_WINDOW_MS) return;
-    const velocity = (lastSample.x - first.x) / span; // 손가락 방향 속도
-    const fling = Math.max(-MAX_FLING_PX, Math.min(MAX_FLING_PX, -velocity * FLING_MS));
-    if (Math.abs(fling) < 2) return;
-    glideTo(e.currentTarget.scrollLeft + fling);
+    const velocity = (lastSample.x - first.x) / span; // 손가락 방향 속도(px/ms)
+    const speed = Math.abs(velocity);
+    if (speed < FLICK_VELOCITY) return; // 천천히 놓음: 그 자리에 멈춤
+
+    if (speed >= FAST_VELOCITY) {
+      // 세게 튕김: 속도만큼 자유롭게 굴러간다
+      const fling = Math.max(-MAX_FLING_PX, Math.min(MAX_FLING_PX, -velocity * FLING_MS));
+      glideTo(e.currentTarget.scrollLeft + fling);
+      return;
+    }
+    // 살짝 튕김: 누른 순간 가운데에 있던 카드의 바로 옆 카드를 가운데로
+    const { centers } = measureCards(e.currentTarget, cardSelector);
+    if (centers.length === 0) return;
+    const direction = velocity < 0 ? 1 : -1; // 손가락이 왼쪽으로 → 오른쪽 카드
+    const index = Math.min(centers.length - 1, Math.max(0, drag.anchorIndex + direction));
+    glideTo((centers[index] ?? 0) - e.currentTarget.clientWidth / 2);
   };
 
   return {

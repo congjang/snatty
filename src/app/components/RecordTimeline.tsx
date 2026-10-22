@@ -51,10 +51,13 @@ function centerInContainer(container: HTMLElement, target: HTMLElement, behavior
   container.scrollTo({ left: Math.max(0, left), behavior });
 }
 
+/** 한 장씩 넘길 때 목표가 되는 카드들 (시작 카드, 기록 카드, 맨 끝 "새 기록" 카드) */
+const CARD_SELECTOR = '[data-name="record_start"], [data-name="record_card"]';
+
 /**
  * Figma `타임라인뷰`(590:7998)·`cards`(1513:13880) — 가로로 긴 카드 띠 + 맨 끝 "새 기록" 카드.
- * 한 장씩 넘기는 스와이프/스냅이 아니라 **자유 스크롤**이다 — 손가락(터치)은 브라우저 기본
- * 스크롤(관성 포함), 마우스는 끌기·휠로 예전 기록까지 쭉 훑어볼 수 있다.
+ * 세게 튕기면 자유롭게 굴러가고(예전 기록까지 쭉 훑기),
+ * 살짝 튕기면 한 장씩 넘어간다. 손가락과 마우스 모두 같은 제스처 — `useFreeScroll` 참고.
  */
 export function RecordTimeline({
   items,
@@ -68,7 +71,7 @@ export function RecordTimeline({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const newCardRef = useRef<HTMLButtonElement>(null);
   const focusRef = useRef<HTMLDivElement>(null);
-  const scrollHandlers = useFreeScroll(scrollerRef);
+  const scrollHandlers = useFreeScroll(scrollerRef, CARD_SELECTOR);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -86,7 +89,7 @@ export function RecordTimeline({
   return (
     <div
       ref={scrollerRef}
-      className="no-scrollbar relative w-full cursor-grab select-none overflow-x-auto overflow-y-hidden overscroll-x-contain py-6 active:cursor-grabbing"
+      className="no-scrollbar relative w-full cursor-grab select-none touch-pan-y overflow-x-auto overflow-y-hidden overscroll-x-contain py-6 active:cursor-grabbing"
       data-name="cards"
       {...scrollHandlers}
     >
