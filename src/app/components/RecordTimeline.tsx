@@ -23,7 +23,7 @@ export interface RecordTimelineStart {
 export interface RecordTimelineProps {
   /** 오래된 기록 → 최신 기록 순 (왼쪽 → 오른쪽) */
   items: RecordTimelineItem[];
-  /** 맨 앞 "시작" 카드에 표시할 시작 시각 (마운트 후 채움) */
+  /** 맨 앞 "시작" 카드에 표시할 시작 시각 = 가장 오래된 기록을 쓴 시각. 기록이 없으면 null */
   start: RecordTimelineStart | null;
   /** 기록하려는 주제 이름 — "시작" 카드의 라벨 */
   startLabel: string;
@@ -94,8 +94,8 @@ export function RecordTimeline({
         <li className="flex items-center">
           <Connector />
           <TimelineStartCard
-            date={start?.date ?? { yyyy: "", mm: "", dd: "" }}
-            timeLabel={start?.timeLabel ?? ""}
+            date={start?.date}
+            timeLabel={start?.timeLabel}
             weatherIcon={start?.weatherIcon}
             label={startLabel}
           />

@@ -130,13 +130,11 @@ export default function TimelinePage() {
   // 저장소는 최신순 → 타임라인은 오래된 기록이 왼쪽
   const items = useMemo(() => records.map(toTimelineItem).reverse(), [records]);
 
-  // "시작" 카드는 가장 오래된 기록의 시각을 보여주고, 기록이 아직 없으면 지금 시각을 보여준다.
+  // "시작" 카드의 시각 = 이 타임라인에서 가장 오래된 기록을 쓴 시각. 기록이 없으면 시각을 비운다.
   const oldest = items[0];
   const start = oldest
     ? { date: oldest.date, timeLabel: oldest.timeLabel, weatherIcon: oldest.weatherIcon }
-    : now
-      ? { date: now.date, timeLabel: now.timeLabel, weatherIcon: null }
-      : null;
+    : null;
 
   const goWrite = () => router.push("/write");
 

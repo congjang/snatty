@@ -9,9 +9,10 @@ import { WeatherItem } from "./WeatherItem";
 const cn = (...args: Parameters<typeof clsx>) => twMerge(clsx(...args));
 
 export interface TimelineStartCardProps {
-  date: { yyyy: string; mm: string; dd: string };
-  /** 예: `오후 4:47` */
-  timeLabel: string;
+  /** 타임라인에서 가장 오래된 기록을 쓴 날짜. 기록이 아직 없으면 생략 — 날짜·시각 영역을 그리지 않는다 */
+  date?: { yyyy: string; mm: string; dd: string };
+  /** 가장 오래된 기록을 쓴 시각. 예: `오후 4:47` */
+  timeLabel?: string;
   weatherIcon?: WeatherIconName | null;
   /** 사용자가 기록하려는 주제 이름 (예: 소확행). 아래에 "시작"이 붙는다 */
   label: string;
@@ -34,10 +35,12 @@ export function TimelineStartCard({
       )}
       data-name="record_start"
     >
-      <div className="flex shrink-0 flex-col items-center" data-name="date set">
-        <DateLabel yyyy={date.yyyy} mm={date.mm} dd={date.dd} />
-        <WeatherItem timeLabel={timeLabel} weatherIcon={weatherIcon} />
-      </div>
+      {date && timeLabel ? (
+        <div className="flex shrink-0 flex-col items-center" data-name="date set">
+          <DateLabel yyyy={date.yyyy} mm={date.mm} dd={date.dd} />
+          <WeatherItem timeLabel={timeLabel} weatherIcon={weatherIcon} />
+        </div>
+      ) : null}
       <div
         className="flex max-w-full flex-col items-center text-center font-[family-name:var(--Typography-font-family)] text-[length:var(--Typography-font-size-Label-S,14px)] font-semibold leading-[1.2] text-[color:var(--colorElementBase1Default,#35363b)] whitespace-nowrap"
         data-name="label"
