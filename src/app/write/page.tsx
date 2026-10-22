@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppFrame } from "../components/AppFrame";
 import { Button } from "../components/Button";
@@ -13,9 +13,9 @@ const MAX_LENGTH = 500;
 const PLACEHOLDER = "바로 지금, 어떤 생각이 떠올랐나요?";
 const TOAST_DURATION_MS = 3000;
 
-// 입력창과 크기 측정용 미러가 줄바꿈까지 똑같이 렌더되어야 높이가 맞는다.
+// 입력창과 높이 측정용 미러가 줄바꿈까지 똑같이 렌더되어야 글 높이가 맞는다.
 const TEXT_STYLE =
-  "col-start-1 row-start-1 w-full whitespace-pre-wrap break-words text-center font-[family-name:var(--Typography-font-family)] text-[length:var(--Typography-font-size-Headline-M,28px)] font-bold leading-[1.3]";
+  "w-full whitespace-pre-wrap break-words text-center font-[family-name:var(--Typography-font-family)] text-[length:var(--Typography-font-size-Headline-M,28px)] font-bold leading-[1.3]";
 
 /** 기록하기 — 쓰기 전용 전체 화면. 시스템(네이티브) 키보드를 그대로 사용 */
 export default function WritePage() {
@@ -27,6 +27,8 @@ export default function WritePage() {
   /** localStorage 쓰기 자체가 실패한 경우 — 서버 동기화 실패보다 심각(로컬에도 안 남음). */
   const [localSaveFailed, setLocalSaveFailed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const areaRef = useRef<HTMLDivElement>(null);
+  const mirrorRef = useRef<HTMLDivElement>(null);
   const toastTimeoutRef = useRef<number | null>(null);
 
   const isEmpty = text.trim().length === 0;
@@ -38,6 +40,24 @@ export default function WritePage() {
         window.clearTimeout(toastTimeoutRef.current);
     };
   }, []);
+
+  // 입력창은 영역 전체(Figma placeholder 342×332)를 차지하고, 글은 그 안에서 세로 중앙에 놓는다.
+  // textarea 안의 글은 CSS만으로 세로 중앙 정렬이 안 되므로, 미러로 글 높이를 재서 위쪽 여백을 넣는다.
+  // 키보드가 올라와 영역 높이가 바뀌어도 다시 맞춘다. 글이 영역보다 길면 여백 0 + 입력창 안에서 스크롤.
+  useLayoutEffect(() => {
+    const area = areaRef.current;
+    const mirror = mirrorRef.current;
+    const textarea = textareaRef.current;
+    if (!area || !mirror || !textarea) return;
+    const center = () => {
+      const pad = Math.max(0, Math.floor((area.clientHeight - mirror.offsetHeight) / 2));
+      textarea.style.paddingTop = `${pad}px`;
+    };
+    center();
+    const observer = new ResizeObserver(center);
+    observer.observe(area);
+    return () => observer.disconnect();
+  }, [text]);
 
   const goBack = () => router.replace("/");
 
@@ -101,28 +121,26 @@ export default function WritePage() {
         </Button>
       </header>
 
-      {/* 키보드가 올라와도 남은 영역의 세로 중앙에 글이 놓이고, 길어지면 이 영역 안에서 스크롤 */}
-      <div
-        className="flex min-h-0 flex-1 cursor-text flex-col gap-2 p-[var(--Grid-Padding-XL,24px)]"
-        onClick={() => textareaRef.current?.focus()}
-      >
-        <div className="flex min-h-0 flex-1 items-center">
-          <div className="grid max-h-full w-full overflow-y-auto">
-            <div aria-hidden className={`${TEXT_STYLE} invisible`}>
-              {`${text || PLACEHOLDER}\n`}
-            </div>
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              maxLength={MAX_LENGTH}
-              placeholder={PLACEHOLDER}
-              aria-label="기록 내용"
-              // TODO: 포커스 링 임시 스타일 — 시안 확정 후 디자인대로 교체 (접근성 필수라 먼저 적용).
-              // 바깥 영역이 overflow-y-auto라 링은 안쪽(inset)으로 그린다.
-              className={`${TEXT_STYLE} resize-none overflow-hidden rounded-[var(--Grid-Radius-L,12px)] bg-transparent text-[color:var(--colorElementBase1Default,#35363b)] outline-none placeholder:text-[color:var(--colorElementBase1Disabled,rgba(0,0,0,0.3))] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--colorOutlinePrimaryDefault,#03584d)]`}
-            />
+      {/* Figma record_card: 입력창(placeholder) 영역 + 아래 카운터. 입력창이 영역 전체라 어디를 눌러도 입력된다 */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-[var(--Grid-Padding-XL,24px)]">
+        <div ref={areaRef} className="relative min-h-0 flex-1">
+          <div
+            ref={mirrorRef}
+            aria-hidden
+            className={`${TEXT_STYLE} pointer-events-none invisible absolute inset-x-0 top-0`}
+          >
+            {/* 끝이 줄바꿈이면 마지막 빈 줄도 높이에 포함되도록 공백 하나를 붙인다 */}
+            {(text || PLACEHOLDER) + (text.endsWith("\n") ? " " : "")}
           </div>
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={MAX_LENGTH}
+            placeholder={PLACEHOLDER}
+            aria-label="기록 내용"
+            className={`${TEXT_STYLE} no-scrollbar absolute inset-0 h-full resize-none overflow-y-auto bg-transparent text-[color:var(--colorElementBase1Default,#35363b)] outline-none placeholder:text-[color:var(--colorElementBase1Disabled,rgba(0,0,0,0.3))]`}
+          />
         </div>
         <p className="w-full shrink-0 text-right font-[family-name:var(--Typography-font-family)] text-[length:var(--Typography-font-size-Caption-M,10px)] leading-[1.2] text-[color:var(--colorElementBase1Disabled,rgba(0,0,0,0.3))]">
           {text.length}/{MAX_LENGTH}
