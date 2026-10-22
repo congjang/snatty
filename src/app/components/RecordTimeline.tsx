@@ -90,9 +90,9 @@ export function RecordTimeline({
       data-name="cards"
       {...scrollHandlers}
     >
-      <ul className="flex w-max items-center pl-[calc(50%-117.5px)] pr-[calc(50%-120px)]">
+      <ul className="flex w-max items-center pl-[calc(50%-63px)] pr-[calc(50%-120px)]">
         <li className="flex items-center">
-          <Connector />
+          {/* 시작 카드 왼쪽에는 연결선이 없다. 왼쪽 여백(화면 절반 − 카드 폭 126px의 절반)은 시작 카드를 화면 가운데까지 끌어올 수 있게 하려는 것 */}
           <TimelineStartCard
             date={start?.date}
             timeLabel={start?.timeLabel}
