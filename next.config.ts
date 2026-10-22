@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     externalDir: true,
+    // 이 프로젝트는 외부 드라이브(/Volumes/...)에 있어 macOS가 캐시 폴더에 `._*` 파일을 만들고,
+    // Turbopack이 그걸 읽다가 "Failed to open database / invalid digit found in string"으로
+    // 개발 서버가 매번 죽는다. 개발 서버의 디스크 캐시를 끄면(첫 컴파일만 조금 느려짐) 해결.
+    turbopackFileSystemCacheForDev: false,
   },
 };
 
