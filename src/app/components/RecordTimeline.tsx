@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type { WeatherIconName } from "../../icons";
 import { useFreeScroll } from "../lib/useFreeScroll";
 import { TimelineRecordCard } from "./TimelineRecordCard";
+import { TimelineStartCard } from "./TimelineStartCard";
 
 export interface RecordTimelineItem {
   id: string;
@@ -13,9 +14,19 @@ export interface RecordTimelineItem {
   weatherIcon?: WeatherIconName | null;
 }
 
+export interface RecordTimelineStart {
+  date: { yyyy: string; mm: string; dd: string };
+  timeLabel: string;
+  weatherIcon?: WeatherIconName | null;
+}
+
 export interface RecordTimelineProps {
   /** 오래된 기록 → 최신 기록 순 (왼쪽 → 오른쪽) */
   items: RecordTimelineItem[];
+  /** 맨 앞 "시작" 카드에 표시할 시작 시각 (마운트 후 채움) */
+  start: RecordTimelineStart | null;
+  /** 기록하려는 주제 이름 — "시작" 카드의 라벨 */
+  startLabel: string;
   /** 맨 오른쪽 "새 기록" 카드에 표시할 오늘 날짜·시각 (마운트 후 채움) */
   now: { date: { yyyy: string; mm: string; dd: string }; timeLabel: string } | null;
   nowWeatherIcon?: WeatherIconName | null;
@@ -47,6 +58,8 @@ function centerInContainer(container: HTMLElement, target: HTMLElement, behavior
  */
 export function RecordTimeline({
   items,
+  start,
+  startLabel,
   now,
   nowWeatherIcon,
   focusId,
@@ -77,7 +90,16 @@ export function RecordTimeline({
       data-name="cards"
       {...scrollHandlers}
     >
-      <ul className="flex w-max items-center pl-[calc(50%-174.5px)] pr-[calc(50%-120px)]">
+      <ul className="flex w-max items-center pl-[calc(50%-117.5px)] pr-[calc(50%-120px)]">
+        <li className="flex items-center">
+          <Connector />
+          <TimelineStartCard
+            date={start?.date ?? { yyyy: "", mm: "", dd: "" }}
+            timeLabel={start?.timeLabel ?? ""}
+            weatherIcon={start?.weatherIcon}
+            label={startLabel}
+          />
+        </li>
         {items.map((item) => (
           <li key={item.id} className="flex items-center">
             <Connector />

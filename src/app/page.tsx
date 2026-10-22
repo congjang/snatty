@@ -23,6 +23,9 @@ import { useWeatherSnapshot } from "./lib/useWeatherSnapshot";
 
 const TOAST_DURATION_MS = 2500;
 
+// TODO: 온보딩에서 사용자가 고르거나 직접 입력한 "기록할 주제"로 교체 (지금은 고정값).
+const RECORD_TOPIC_LABEL = "소확행";
+
 function toTimelineItem(r: StoredRecord): RecordTimelineItem {
   const created = new Date(r.createdAt);
   return {
@@ -127,6 +130,14 @@ export default function TimelinePage() {
   // 저장소는 최신순 → 타임라인은 오래된 기록이 왼쪽
   const items = useMemo(() => records.map(toTimelineItem).reverse(), [records]);
 
+  // "시작" 카드는 가장 오래된 기록의 시각을 보여주고, 기록이 아직 없으면 지금 시각을 보여준다.
+  const oldest = items[0];
+  const start = oldest
+    ? { date: oldest.date, timeLabel: oldest.timeLabel, weatherIcon: oldest.weatherIcon }
+    : now
+      ? { date: now.date, timeLabel: now.timeLabel, weatherIcon: null }
+      : null;
+
   const goWrite = () => router.push("/write");
 
   return (
@@ -138,6 +149,8 @@ export default function TimelinePage() {
       <div className="flex min-h-0 flex-1 items-center">
         <RecordTimeline
           items={items}
+          start={start}
+          startLabel={RECORD_TOPIC_LABEL}
           now={now}
           nowWeatherIcon={weatherIconFromStored(weather?.icon)}
           focusId={focusId}
