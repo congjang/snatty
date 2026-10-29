@@ -63,7 +63,7 @@
 2. 서버에 임시 마이그레이션 엔드포인트(관리자 전용 또는 최초 로그인 1회성 플로우)를 추가:
    - 입력: 실사용자 `userId`(JWT로 확정) + 재소유 대상 `sourceEmail`(dev-placeholder).
    - 동작: `JournalEntry.updateMany({ where: { userId: sourceUser.id }, data: { userId: targetUser.id } })`
-     — `body`는 절대 건드리지 않으므로 append-only 정책과 충돌 없음.
+     — `userId`만 바꾸고 `body`는 건드리지 않음(2026-10-29 기록 수정 허용 이후에도 이 작업은 본문과 무관).
    - `AiArtifact`, `ReminderSpec`, `DevicePushToken`도 동일한 방식으로 `userId` 재소유.
    - 완료 후 `sourceUser`(dev-placeholder `User` row)는 삭제하거나 비활성 표시.
 3. `clientMutationId` 충돌 가능성 검토: 재소유 대상과 실사용자 계정에 동일한
