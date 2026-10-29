@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./pretendard.css";
 @import "./design-tokens/primitives.css";
 /* Grid 토큰은 `design-tokens/semantic.css`(Figma sementic.light)에 포함 */
 @import "./design-tokens/semantic.css";
@@ -11,8 +12,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--Typography-font-family);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,7 +25,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--Typography-font-family, "Pretendard", sans-serif);
 }
 
 /* Hide scrollbars while keeping scroll behavior (app-like UX) */

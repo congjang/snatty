@@ -131,6 +131,20 @@ className="bg-[color:var(--colorButtonContainerPrimaryDefault,#046253)]"
 
 ---
 
+## 서체 (Pretendard) — 2026-10-29
+
+디자인 토큰 `--fontFamily`가 `Pretendard`를 가리키므로, 서체 파일을 프로젝트가 직접 불러온다(설치 여부와 무관하게 시안 서체로 보이도록).
+
+| 구분 | 위치·내용 |
+|---|---|
+| 서체 파일 | `public/fonts/pretendard/` — Pretendard 가변 서체 **동적 분할판** 92개 조각(합 2.8MB). 화면의 글자에 필요한 조각만 받는다(타임라인 화면 기준 6개, 약 157KB) |
+| 연결 CSS | `src/app/pretendard.css` — `globals.css`에서 불러옴. `font-family` 이름을 토큰과 같은 `Pretendard`로, 경로를 `/fonts/pretendard/`로 바꾼 것 외에는 원본 그대로 |
+| 본문 | `globals.css`의 `body`가 `--Typography-font-family` 토큰을 씀 |
+| 출처·라이선스 | https://github.com/orioncactus/pretendard (npm `pretendard@1.3.9`), SIL OFL 1.1. 라이선스 파일은 서체 폴더에 함께 있음 |
+| 이름을 바꾼 이유 | 원본 CSS의 서체 이름은 `Pretendard Variable`인데 Figma 토큰 값은 `pretendard`라서, 토큰 파일(자동 생성물)을 고치지 않으려고 CSS 쪽 이름을 맞춤 |
+
+**새 버전으로 바꿀 때:** `npm pack pretendard@<버전>`으로 받아 `dist/web/variable/woff2-dynamic-subset/*.woff2`를 서체 폴더에 덮어쓰고, `dist/web/variable/pretendardvariable-dynamic-subset.css`에서 위 두 가지(서체 이름, 경로)만 바꿔 `src/app/pretendard.css`에 넣는다. 의존성(`npm install pretendard`)으로 넣지 않은 이유는 패키지가 97MB라서다.
+
 ## 관련 문서
 
 - [`src/icons/ICONS-REVIEW.md`](../src/icons/ICONS-REVIEW.md) — 아이콘 Figma↔코드 매핑 검토
