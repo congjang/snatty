@@ -97,7 +97,7 @@ src/app/
 - Fastify 5 + Prisma 6 + Zod
 - 현재 인증: `X-Dev-Email` 헤더 (개발 전용) — **프로덕션 배포 전 반드시 JWT로 교체**
 - DB 스키마 변경: `server/prisma/schema.prisma` → `prisma migrate dev`
-- `JournalEntry.body`는 사용자가 저장 후에도 수정할 수 있다 (2026-10-29 결정, 이전 append-only 정책 폐기). 서버에 수정 API를 만들 때 `server/src/prismaGuards.ts`의 body 수정 차단 가드를 함께 교체한다(서버 변경이라 PR). 수정 전 내용 보관 여부는 미정
+- `JournalEntry.body`는 사용자가 저장 후에도 수정할 수 있다 (2026-10-29 결정, 이전 append-only 정책 폐기). 서버에 수정 API를 만들 때 `server/src/prismaGuards.ts`의 body 수정 차단 가드를 함께 교체한다(서버 변경이라 PR). 수정 전 내용은 보관하지 않고 덮어쓴다(수정 이력 테이블 없음)
 - AI 처리 결과는 `AiArtifact`에 분리 저장 (원본 데이터 오염 금지)
 
 ---
@@ -130,7 +130,7 @@ src/app/
 
 ### 5-2. 데이터 무결성
 
-- `JournalEntry.body`는 사용자가 수정할 수 있다 (2026-10-29). 수정 이력 보관 여부·"수정됨" 표시·다기기 수정 충돌 규칙은 미정 — 정해지기 전에 데이터 모델을 임의로 설계하지 말 것. 삭제는 소프트 삭제 유지
+- `JournalEntry.body`는 사용자가 수정할 수 있다 (2026-10-29). 수정 전 내용은 보관하지 않고 덮어쓰며, 기록 카드에 "수정됨"을 표시한다(2026-10-29 결정, 표시 디자인은 시안 대기). 다기기 수정 충돌 규칙은 미정 — 정해지기 전에 임의로 설계하지 말 것. 삭제는 소프트 삭제 유지
 - localStorage 키 `snatty-records-v1` 스키마 변경 시 마이그레이션 로직 필수
 - Prisma 마이그레이션은 `migrate dev` → `migrate deploy` 절차 준수
 
